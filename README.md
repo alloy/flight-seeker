@@ -1,11 +1,16 @@
 # Flight Seeker
 
+It finds flights through Google's QPX Express service and automatically calculates level/award mileage based on a frequent flyer program and level.
+
 * Requires a QPX Express API key: https://developers.google.com/qpx-express/v1/prereqs#getaccount
 * QPX Express reference: https://developers.google.com/qpx-express/v1/trips/search
 
-## Usage
+## TODO
 
-Currently the search query is hardcoded, this will need to move to the CLI.
+* Only FlyingBlue and selected SkyTeam awards have been implemented, please send pull-requests for your program.
+* Currently the search query is hardcoded, this will need to move to the CLI.
+
+## Usage
 
 ```
 $ bundle install
