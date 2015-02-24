@@ -4,11 +4,13 @@ It finds flights through Google's QPX Express service and automatically calculat
 
 * Requires a QPX Express API key: https://developers.google.com/qpx-express/v1/prereqs#getaccount
 * QPX Express reference: https://developers.google.com/qpx-express/v1/trips/search
+* Because the free tier of QPX Express only allows for 50 queries per day, the response is cached if the query remains the same. This allows you to have different views on the same data (e.g. sort by different columns) while not making any more requests. Keep in mind that it is not invalidated automatically, so you will have to make sure that the data is up-to-date before deciding upon an itinerary (by deleting the cache file and requesting again).
 
 ## TODO
 
 * Only FlyingBlue and selected SkyTeam awards have been implemented, please send pull-requests for your program.
 * Currently the search query is hardcoded, this will need to move to the CLI.
+* Invalidate cache files after X.
 
 ## Usage
 
