@@ -35,9 +35,9 @@ class Airport
   end
 end
 
-class FrequentFlyerProgram
-  def initialize(level_bonus_multiplier)
-    @level_bonus_multiplier = level_bonus_multiplier
+class AwardProgram
+  def initialize(program_level)
+    @program_level = program_level
   end
 
   def level_mileage_for(segment)
@@ -45,7 +45,7 @@ class FrequentFlyerProgram
   end
 
   def award_mileage_for(segment)
-    level_mileage_for(segment) + (@level_bonus_multiplier * segment.mileage)
+    multiplier_for(segment) * segment.mileage
   end
 
   def multiplier_for(segment)
@@ -57,19 +57,22 @@ class FrequentFlyerProgram
     end
   end
 
-  class FlyingBlue < FrequentFlyerProgram
-    def initialize(level)
-      multiplier = case level
-                   when :ivory
-                     0
-                   when :silver
-                     0.5
-                   when :gold
-                     0.75
-                   when :platinum
-                     1
-                   end
-      super(multiplier)
+  class FlyingBlue < AwardProgram
+    def program_level_bonus
+      case @program_level
+      when :ivory
+        0
+      when :silver
+        0.5
+      when :gold
+        0.75
+      when :platinum
+        1
+      end
+    end
+
+    def award_mileage_for(segment)
+      super + (program_level_bonus * segment.mileage)
     end
 
     # http://www.flyingblue.com/earn-and-spend-miles/airlines/partner/39/klm.html
@@ -324,20 +327,20 @@ class Itinerary
     trips.inject(0) { |sum, trip| sum + trip.mileage }
   end
 
-  def level_mileage(frequent_flyer)
-    trips.inject(0) { |sum, trip| sum + trip.level_mileage(frequent_flyer) }
+  def level_mileage(award_program)
+    trips.inject(0) { |sum, trip| sum + trip.level_mileage(award_program) }
   end
 
-  def award_mileage(frequent_flyer)
-    trips.inject(0) { |sum, trip| sum + trip.award_mileage(frequent_flyer) }
+  def award_mileage(award_program)
+    trips.inject(0) { |sum, trip| sum + trip.award_mileage(award_program) }
   end
 
-  def cents_per_level_mile(frequent_flyer)
-     (price * 100) / level_mileage(frequent_flyer)
+  def cents_per_level_mile(award_program)
+     (price * 100) / level_mileage(award_program)
   end
 
-  def cents_per_award_mile(frequent_flyer)
-    (price * 100) / award_mileage(frequent_flyer)
+  def cents_per_award_mile(award_program)
+    (price * 100) / award_mileage(award_program)
   end
 
   # In minutes
@@ -377,12 +380,12 @@ class Itinerary
       segments.inject(0) { |sum, segment| sum + segment.mileage }
     end
 
-    def level_mileage(frequent_flyer)
-      segments.inject(0) { |sum, segment| sum + segment.level_mileage(frequent_flyer) }
+    def level_mileage(award_program)
+      segments.inject(0) { |sum, segment| sum + segment.level_mileage(award_program) }
     end
 
-    def award_mileage(frequent_flyer)
-      segments.inject(0) { |sum, segment| sum + segment.award_mileage(frequent_flyer) }
+    def award_mileage(award_program)
+      segments.inject(0) { |sum, segment| sum + segment.award_mileage(award_program) }
     end
 
     class Segment
@@ -414,12 +417,12 @@ class Itinerary
         leg['mileage']
       end
 
-      def level_mileage(frequent_flyer)
-        frequent_flyer.level_mileage_for(self)
+      def level_mileage(award_program)
+        award_program.level_mileage_for(self)
       end
 
-      def award_mileage(frequent_flyer)
-        frequent_flyer.award_mileage_for(self)
+      def award_mileage(award_program)
+        award_program.award_mileage_for(self)
       end
 
       def european?
@@ -534,7 +537,7 @@ price = 'EUR1000'
 itineraries = QPX.search_round_trip(Alliance.sky_team, 'AMS', 'LGA', '2015-04-13', '2015-04-18', 'NL', price)
 #itineraries = QPX.search_round_trip(Alliance.sky_team, 'AMS', 'LGA', '2015-04-13', '2015-04-17', 'NL', price)
 
-frequent_flyer = FrequentFlyerProgram::FlyingBlue.new(:silver)
+award_program = AwardProgram::FlyingBlue.new(:silver)
 
 def minutes_to_words(minutes)
   [[60, :m], [24, :h], [1000, :d]].map do |count, name|
@@ -557,7 +560,7 @@ end
 currency = currency_symbol_for(price)
 
 rows = itineraries.map do |itinerary|
-  [itinerary.price, itinerary.segment_count, itinerary.mileage, itinerary.level_mileage(frequent_flyer), itinerary.cents_per_level_mile(frequent_flyer), itinerary.award_mileage(frequent_flyer), itinerary.cents_per_award_mile(frequent_flyer), itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration]
+  [itinerary.price, itinerary.segment_count, itinerary.mileage, itinerary.level_mileage(award_program), itinerary.cents_per_level_mile(award_program), itinerary.award_mileage(award_program), itinerary.cents_per_award_mile(award_program), itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration]
 end
 
 if options[:sort]
