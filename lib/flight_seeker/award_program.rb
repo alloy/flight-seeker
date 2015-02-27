@@ -5,41 +5,51 @@ module FlightSeeker
     end
 
     def itinerary_level_mileage(itinerary)
-      mileage = itinerary_booking_code_mileage(itinerary)
+      mileage = 0
       if @parent_award_program
-        @parent_award_program.itinerary_level_mileage(itinerary)
+        mileage += @parent_award_program.itinerary_level_mileage(itinerary)
       end
       mileage
     end
 
     def itinerary_award_mileage(itinerary)
-      mileage = itinerary_booking_code_mileage(itinerary)
+      mileage = 0
       if @parent_award_program
-        @parent_award_program.itinerary_award_mileage(itinerary)
+        mileage += @parent_award_program.itinerary_award_mileage(itinerary)
       end
       mileage
     end
 
-    private
+    class FrequentFlyer < AwardProgram
+      def itinerary_level_mileage(itinerary)
+        super + itinerary_booking_code_mileage(itinerary)
+      end
 
-    def itinerary_booking_code_mileage(itinerary)
-      itinerary.trips.inject(0) do |itinerary_sum, trip|
-        itinerary_sum + trip.segments.inject(0) do |trip_sum, segment|
-          trip_sum + (segment_booking_code_multiplier(segment) * segment.mileage)
+      def itinerary_award_mileage(itinerary)
+        super + itinerary_booking_code_mileage(itinerary)
+      end
+
+      private
+
+      def itinerary_booking_code_mileage(itinerary)
+        itinerary.trips.inject(0) do |itinerary_sum, trip|
+          itinerary_sum + trip.segments.inject(0) do |trip_sum, segment|
+            trip_sum + (segment_booking_code_multiplier(segment) * segment.mileage)
+          end
+        end
+      end
+
+      def segment_booking_code_multiplier(segment)
+        if multiplier = send(segment.carrier.iata_designator, segment)
+          multiplier
+        else
+          $stderr.puts "[!] Unknown multiplier for: #{segment.inspect}"
+          -1
         end
       end
     end
 
-    def segment_booking_code_multiplier(segment)
-      if multiplier = send(segment.carrier.iata_designator, segment)
-        multiplier
-      else
-        $stderr.puts "[!] Unknown multiplier for: #{segment.inspect}"
-        -1
-      end
-    end
-
-    class FlyingBlue < AwardProgram
+    class FlyingBlue < FrequentFlyer
       def program_level_bonus
         case @program_level
         when :ivory
@@ -201,7 +211,40 @@ module FlightSeeker
     end
 
     class FlyingBlue
+      # TODO You still get 1 award mile per euro spent on any other airline
       class AmericanExpress < AwardProgram
+        CARRIERS = %w{ KL AF DL }
+
+        def includes_one_of_required_carriers?(itinerary)
+          itinerary.trips.any? do |trip|
+            trip.segments.any? do |segment|
+              CARRIERS.include?(segment.carrier.iata_designator)
+            end
+          end
+        end
+
+        def program_level_bonus
+          case @program_level
+          when :gold
+            1.5
+          end
+        end
+
+        def itinerary_level_mileage(itinerary)
+          mileage = super
+          if includes_one_of_required_carriers?(itinerary)
+            mileage += (program_level_bonus * itinerary.price)
+          end
+          mileage
+        end
+
+        def itinerary_award_mileage(itinerary)
+          mileage = super
+          if includes_one_of_required_carriers?(itinerary)
+            mileage += (program_level_bonus * itinerary.price)
+          end
+          mileage
+        end
       end
     end
 
