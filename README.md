@@ -17,7 +17,7 @@ It finds flights through Google's QPX Express service and automatically calculat
 
 ```
 $ bundle install
-$ env QPX_EXPRESS_API_KEY=SECRET bundle exec ruby flight-seeker.rb --sort=-2,-4,9
+$ env QPX_EXPRESS_API_KEY=SECRET bundle exec ./bin/flight-seeker --sale-country=NL --max-price=EUR1000 --award-program=FlyingBlue-silver --award-program=FlyingBlue::AmericanExpress-gold --trip=2015-04-13-ams-lga --trip=2015-04-18-lga-ams --sort=-2,-4,9
 ```
 
 Example output sorted by segments (descending), level mileage (descending), and outbound duration (ascending):
