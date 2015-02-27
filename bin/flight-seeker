@@ -30,7 +30,7 @@ OptionParser.new do |opts|
   opts.on("--award-program=NAME-LEVEL", "The name of the award program and its level (currently `FlyingBlue-ivory', `FlyingBlue-silver', `FlyingBlue-gold', `FlyingBlue-platinum'). Consecutive programs are added as bonus programs (currently only `FlyingBlue::AmericanExpress-gold').") do |program_and_level|
     program, level = program_and_level.split('-')
     klass = eval("FlightSeeker::AwardProgram::#{program}")
-    award_program = klass.new(level, award_program)
+    award_program = klass.new(level.to_sym, award_program)
   end
 
   opts.on("--trip=YEAR-MONTH-DAY-ORIGIN-[STOPS]-DESTINATION", "Adds a trip that starts on the specified date and may span several stops.") do |trip|

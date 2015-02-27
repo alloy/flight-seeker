@@ -1,7 +1,7 @@
 module FlightSeeker
   class AwardProgram
     def initialize(program_level, parent_award_program)
-      @program_level, @parent_award_program = program_level.to_sym, parent_award_program
+      @program_level, @parent_award_program = program_level, parent_award_program
     end
 
     def itinerary_level_mileage(itinerary)
@@ -52,14 +52,14 @@ module FlightSeeker
     class FlyingBlue < FrequentFlyer
       def program_level_bonus
         case @program_level
-        when :ivory
-          0
         when :silver
           0.5
         when :gold
           0.75
         when :platinum
           1
+        else
+          0
         end
       end
 
@@ -211,7 +211,17 @@ module FlightSeeker
     end
 
     class FlyingBlue
-      # TODO You still get 1 award mile per euro spent on any other airline
+      # Gold card:
+      #
+      # https://www.americanexpress.com/nl/content/flying-blue-gold-card/
+      #
+      # * Trips bought through either KLM or Air France: 1.5 award and level mile per euro.
+      #   (To be able to buy a trip online or on the phone the itinerary needs to include at least one segment operated
+      #   by KLM, Air France, or Delta Airlines.)
+      #
+      # * All other expenses (including tickets bought for other SkyTeam operated itineraries): 1 award mile per euro.
+      #   TODO This still needs to be implemented.
+      #
       class AmericanExpress < AwardProgram
         CARRIERS = %w{ KL AF DL }
 

@@ -48,7 +48,7 @@ module FlightSeeker
       end
 
       def inspect
-        "<#{segments.first.origin}-#{segments.last.destination} duration:#{duration} #{segments.map(&:inspect).join(', ')}>"
+        "<#{segments.first.origin.iata_designator}-#{segments.last.destination.iata_designator} duration:#{duration} segments:#{segments.map(&:inspect).join(', ')}>"
       end
 
       def to_s
@@ -80,7 +80,7 @@ module FlightSeeker
         end
 
         def inspect
-          "<#{carrier.iata_designator} booking-code:#{booking_code} mileage:#{mileage} leg:#{origin.inspect}-#{destination.inspect}>"
+          "<#{carrier.iata_designator} booking-code:#{booking_code} mileage:#{mileage} leg:#{origin.inspect}-#{destination.inspect} european:#{european?} national:#{national?}>"
         end
 
         def carrier

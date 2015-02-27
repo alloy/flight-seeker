@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    bacon (1.2.0)
     nap (0.8.0)
     terminal-table (1.4.5)
 
@@ -8,5 +9,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bacon
   nap
   terminal-table
