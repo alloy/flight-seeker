@@ -1,0 +1,65 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.expand_path('../../lib', __FILE__)
+require 'flight_seeker'
+
+require 'optparse'
+
+trips = []
+sale_country = nil
+max_price = nil
+award_program = nil
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: flight-seeker [options]"
+
+  opts.on("--help", "Show this help banner") do
+    puts opts
+    exit
+  end
+
+  opts.on("--sale-country=COUNTRY", "The IATA country code of the country where the ticket sale would be made.") do |country|
+    sale_country = country
+  end
+
+  opts.on("--max-price=PRICE", "The maximum price for the full itinerary, which should be specified according to ISO-4217. E.g. EUR999") do |price|
+    max_price = price
+  end
+
+  opts.on("--award-program=NAME-LEVEL", "The name of the award program and its level (currently `FlyingBlue-ivory', `FlyingBlue-silver', `FlyingBlue-gold', `FlyingBlue-platinum'). Consecutive programs are added as bonus programs (currently only `FlyingBlue::AmericanExpress-gold').") do |program_and_level|
+    program, level = program_and_level.split('-')
+    klass = eval("FlightSeeker::AwardProgram::#{program}")
+    award_program = klass.new(level, award_program)
+  end
+
+  opts.on("--trip=YEAR-MONTH-DAY-ORIGIN-[STOPS]-DESTINATION", "Adds a trip that starts on the specified date and may span several stops.") do |trip|
+    trips << FlightSeeker::TripQuery.from_trip_description(trip)
+  end
+
+  #opts.on("--creditcard=NAME", "")
+
+  opts.on("--sort=FIELDS", "Sort by field indices (comma separated, negative for reverse sort)") do |fields|
+    options[:sort] = fields.split(',').map(&:to_i)
+    if options[:sort].any?(&:zero?)
+      raise "Sort fields may not be 0. Sorting is 1-based."
+    end
+  end
+
+end.parse!
+
+unless sale_country
+  raise "[!] A sale country is required."
+end
+
+unless award_program
+  raise "[!] A award program is required."
+end
+
+if itineraries = FlightSeeker.search(FlightSeeker::Alliance.sky_team, trips, sale_country, max_price)
+  view = FlightSeeker::View.new(itineraries, award_program, options)
+  puts view.table
+else
+  puts "[!] No flights found."
+end
+
