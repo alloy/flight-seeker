@@ -10,7 +10,8 @@ module FlightSeeker
 
     def rows
       rows = itineraries.map do |itinerary|
-        [itinerary.price, itinerary.segment_count, itinerary.mileage, itinerary.level_mileage(award_program), itinerary.cents_per_level_mile(award_program), itinerary.award_mileage(award_program), itinerary.cents_per_award_mile(award_program), itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration]
+        #[itinerary.price, itinerary.segment_count, itinerary.mileage, award_program.itinerary_level_mileage(itinerary), itinerary.cents_per_level_mile(award_program), award_program.itinerary_award_mileage(itinerary), itinerary.cents_per_award_mile(award_program), itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration]
+        [itinerary.price, itinerary.segment_count, itinerary.mileage, award_program.itinerary_level_mileage(itinerary), 0, award_program.itinerary_award_mileage(itinerary), 0, itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration]
       end
       if options[:sort]
         rows.sort! do |row_a, row_b|

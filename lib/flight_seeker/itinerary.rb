@@ -37,22 +37,6 @@ module FlightSeeker
       trips.inject(0) { |sum, trip| sum + trip.mileage }
     end
 
-    def level_mileage(award_program)
-      trips.inject(0) { |sum, trip| sum + trip.level_mileage(award_program) }
-    end
-
-    def award_mileage(award_program)
-      trips.inject(0) { |sum, trip| sum + trip.award_mileage(award_program) }
-    end
-
-    def cents_per_level_mile(award_program)
-       (price * 100) / level_mileage(award_program)
-    end
-
-    def cents_per_award_mile(award_program)
-      (price * 100) / award_mileage(award_program)
-    end
-
     # In minutes
     def duration
       trips.inject(0) { |sum, trip| sum + trip.duration }
@@ -90,14 +74,6 @@ module FlightSeeker
         segments.inject(0) { |sum, segment| sum + segment.mileage }
       end
 
-      def level_mileage(award_program)
-        segments.inject(0) { |sum, segment| sum + segment.level_mileage(award_program) }
-      end
-
-      def award_mileage(award_program)
-        segments.inject(0) { |sum, segment| sum + segment.award_mileage(award_program) }
-      end
-
       class Segment
         def initialize(payload)
           @payload = payload
@@ -125,14 +101,6 @@ module FlightSeeker
 
         def mileage
           leg['mileage']
-        end
-
-        def level_mileage(award_program)
-          award_program.level_mileage_for(self)
-        end
-
-        def award_mileage(award_program)
-          award_program.award_mileage_for(self)
         end
 
         def european?

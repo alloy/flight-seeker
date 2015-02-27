@@ -4,15 +4,33 @@ module FlightSeeker
       @program_level, @parent_award_program = program_level.to_sym, parent_award_program
     end
 
-    def level_mileage_for(segment)
-      multiplier_for(segment) * segment.mileage
+    def itinerary_level_mileage(itinerary)
+      mileage = itinerary_booking_code_mileage(itinerary)
+      if @parent_award_program
+        @parent_award_program.itinerary_level_mileage(itinerary)
+      end
+      mileage
     end
 
-    def award_mileage_for(segment)
-      multiplier_for(segment) * segment.mileage
+    def itinerary_award_mileage(itinerary)
+      mileage = itinerary_booking_code_mileage(itinerary)
+      if @parent_award_program
+        @parent_award_program.itinerary_award_mileage(itinerary)
+      end
+      mileage
     end
 
-    def multiplier_for(segment)
+    private
+
+    def itinerary_booking_code_mileage(itinerary)
+      itinerary.trips.inject(0) do |itinerary_sum, trip|
+        itinerary_sum + trip.segments.inject(0) do |trip_sum, segment|
+          trip_sum + (segment_booking_code_multiplier(segment) * segment.mileage)
+        end
+      end
+    end
+
+    def segment_booking_code_multiplier(segment)
       if multiplier = send(segment.carrier.iata_designator, segment)
         multiplier
       else
@@ -35,8 +53,8 @@ module FlightSeeker
         end
       end
 
-      def award_mileage_for(segment)
-        super + (program_level_bonus * segment.mileage)
+      def itinerary_award_mileage(itinerary)
+        super + (program_level_bonus * itinerary.mileage)
       end
 
       # http://www.flyingblue.com/earn-and-spend-miles/airlines/partner/39/klm.html
