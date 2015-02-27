@@ -10,8 +10,8 @@ module FlightSeeker
 
     def rows
       rows = itineraries.map do |itinerary|
-        #[itinerary.price, itinerary.segment_count, itinerary.mileage, award_program.itinerary_level_mileage(itinerary), itinerary.cents_per_level_mile(award_program), award_program.itinerary_award_mileage(itinerary), itinerary.cents_per_award_mile(award_program), itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration]
-        [itinerary.price, itinerary.segment_count, itinerary.mileage, award_program.itinerary_level_mileage(itinerary), 0, award_program.itinerary_award_mileage(itinerary), 0, itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration]
+        #[itinerary.price, itinerary.segment_count, itinerary.mileage, award_program.itinerary_level_mileage(itinerary), itinerary.cents_per_level_mile(award_program), award_program.itinerary_award_mileage(itinerary), itinerary.cents_per_award_mile(award_program), itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration, itinerary.fare_calculation]
+        [itinerary.price, itinerary.segment_count, itinerary.mileage, award_program.itinerary_level_mileage(itinerary), 0, award_program.itinerary_award_mileage(itinerary), 0, itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.first.arrival_time, itinerary.trips.last.to_s, itinerary.trips.last.duration, itinerary.trips.last.arrival_time, itinerary.fare_calculation]
       end
       if options[:sort]
         rows.sort! do |row_a, row_b|
@@ -34,10 +34,10 @@ module FlightSeeker
     end
 
     def table
-      table = Terminal::Table.new(:headings => ['Price', 'Segments', 'Mileage', 'Level Mileage', 'CPM', 'Award Mileage', 'CPM', 'Outbound', 'Duration', 'Inbound', 'Duration'])
+      table = Terminal::Table.new(:headings => ['Price', 'Segments', 'Mileage', 'Level Mileage', 'CPM', 'Award Mileage', 'CPM', 'Outbound', 'Duration', 'Inbound', 'Duration', 'Fare Calculation'])
       rows.each do |row|
-        price, segments, mileage, level_mileage, level_cpm, award_mileage, award_cpm, outbound, outbound_duration, inbound, inbound_duration = row
-        table << ["#{currency}#{price}", segments, mileage, level_mileage, '%.2f¢' % level_cpm, award_mileage, '%.2f¢' % award_cpm, outbound, minutes_to_words(outbound_duration), inbound, minutes_to_words(inbound_duration)]
+        price, segments, mileage, level_mileage, level_cpm, award_mileage, award_cpm, outbound, outbound_duration, outbound_arrival_time, inbound, inbound_duration, inbound_arrival_time, fare_calculation = row
+        table << ["#{currency}#{price}", segments, mileage, level_mileage, '%.2f¢' % level_cpm, award_mileage, '%.2f¢' % award_cpm, outbound, minutes_to_words(outbound_duration), outbound_arrival_time, inbound, minutes_to_words(inbound_duration), inbound_arrival_time, fare_calculation]
         table.add_separator unless row == rows.last
       end
       table

@@ -42,6 +42,11 @@ module FlightSeeker
       trips.inject(0) { |sum, trip| sum + trip.duration }
     end
 
+    # TODO We can use just the first entry, because we only allow for 1 passenger (adult) atm.
+    def fare_calculation
+      @payload['pricing'].first['fareCalculation']
+    end
+
     class Trip
       def initialize(payload)
         @payload = payload
@@ -59,7 +64,7 @@ module FlightSeeker
 
       # In minutes
       def duration
-        @payload['duration']
+        @payload['duration'] + segments.inject(0) { |sum, segment| sum + segment.connection_duration }
       end
 
       def segments
@@ -72,6 +77,10 @@ module FlightSeeker
 
       def mileage
         segments.inject(0) { |sum, segment| sum + segment.mileage }
+      end
+
+      def arrival_time
+        segments.last.arrival_time
       end
 
       class Segment
@@ -109,6 +118,14 @@ module FlightSeeker
 
         def national?
           origin.country == destination.country
+        end
+
+        def connection_duration
+          @payload['connectionDuration'] || 0
+        end
+
+        def arrival_time
+          leg['arrivalTime']
         end
 
         private
