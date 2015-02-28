@@ -2,60 +2,155 @@ require 'terminal-table'
 
 module FlightSeeker
   class View
-    attr_reader :itineraries, :award_program, :options
+    class Row
+      attr_reader :itinerary, :options
 
-    def initialize(itineraries, award_program, options)
-      @itineraries, @award_program, @options = itineraries, award_program, options
+      def initialize(itinerary, options)
+        @itinerary, @options = itinerary, options
+      end
+
+      def price
+        itinerary.price
+      end
+
+      def segment_count
+        itinerary.segment_count
+      end
+
+      def mileage
+        itinerary.mileage
+      end
+
+      def level_mileage
+        options[:award_program].itinerary_level_mileage(itinerary)
+      end
+
+      def award_mileage
+        options[:award_program].itinerary_award_mileage(itinerary)
+      end
+
+      def fare_calculation
+        itinerary.fare_calculation if options[:fare_calculation]
+      end
+
+      def cents_per_mile
+        # TODO
+        0
+      end
+
+      def trip_descriptions
+        itinerary.trips.map(&:to_s)
+      end
+
+      def trip_durations
+        itinerary.trips.map(&:duration)
+      end
+
+      def trip_arrival_times
+        itinerary.trips.map(&:arrival_time) if options[:arrival_time]
+      end
+
+      def values
+        trips = trip_descriptions.zip(trip_durations)
+        trips = trips.zip(trip_arrival_times) if options[:arrival_time]
+        trips.flatten!
+        columns = [price, segment_count, mileage, level_mileage, award_mileage, *trips]
+        columns << fare_calculation if options[:fare_calculation]
+        columns
+      end
+
+      # Formatting
+
+      def formatted_price
+        "#{itinerary.currency}#{price}"
+      end
+
+      def formatted_cents_per_mile
+        '%.2f¢' % cents_per_mile
+      end
+
+      def formatted_trip_durations
+        trip_durations.map do |duration|
+          [[60, :m], [24, :h], [1000, :d]].map do |count, name|
+            if duration > 0
+              duration, n = duration.divmod(count)
+              "#{n.to_i}#{name}"
+            end
+          end.compact.reverse.join
+        end
+      end
+
+      def formatted_values
+        trips = trip_descriptions.zip(formatted_trip_durations)
+        trips = trips.zip(trip_arrival_times) if options[:arrival_time]
+        trips.flatten!
+        columns = [formatted_price, segment_count, mileage, level_mileage, award_mileage, *trips]
+        columns << fare_calculation if options[:fare_calculation]
+        columns
+      end
+    end
+
+    attr_reader :itineraries, :options
+
+    def initialize(itineraries, options)
+      @itineraries, @options = itineraries, options
     end
 
     def rows
-      rows = itineraries.map do |itinerary|
-        #[itinerary.price, itinerary.segment_count, itinerary.mileage, award_program.itinerary_level_mileage(itinerary), itinerary.cents_per_level_mile(award_program), award_program.itinerary_award_mileage(itinerary), itinerary.cents_per_award_mile(award_program), itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.last.to_s, itinerary.trips.last.duration, itinerary.fare_calculation]
-        [itinerary.price, itinerary.segment_count, itinerary.mileage, award_program.itinerary_level_mileage(itinerary), 0, award_program.itinerary_award_mileage(itinerary), 0, itinerary.trips.first.to_s, itinerary.trips.first.duration, itinerary.trips.first.arrival_time, itinerary.trips.last.to_s, itinerary.trips.last.duration, itinerary.trips.last.arrival_time, itinerary.fare_calculation]
-      end
-      if options[:sort]
-        rows.sort! do |row_a, row_b|
-          lhs, rhs = [], []
-          options[:sort].each do |column|
-            # Sorting is 1-based, because we can't have -0 with Fixnum.
-            index = column.abs - 1
-            if column >= 0
-              lhs << row_a[index]
-              rhs << row_b[index]
-            else
-              lhs << row_b[index]
-              rhs << row_a[index]
+      unless @rows
+        @rows = itineraries.map { |itinerary| Row.new(itinerary, options) }
+        if options[:sort]
+          mappings = rows.inject({}) { |h, row| h[row.values] = row; h }
+          sorted_rows = mappings.keys
+
+          sorted_rows.sort! do |row_a, row_b|
+            lhs, rhs = [], []
+            options[:sort].each do |column|
+              # Sorting is 1-based, because we can't have -0 with Fixnum.
+              index = column.abs - 1
+              if column >= 0
+                lhs << row_a[index]
+                rhs << row_b[index]
+              else
+                lhs << row_b[index]
+                rhs << row_a[index]
+              end
             end
+            lhs <=> rhs
           end
-          lhs <=> rhs
+
+          @rows = mappings.values_at(*sorted_rows)
         end
       end
-      rows
+      @rows
+    end
+
+    def headings
+      headings = [
+        'Price',
+        'Segments',
+        'Mileage',
+        'Level Mileage',
+        #'CPM',
+        'Award Mileage',
+        #'CPM',
+      ]
+      itineraries.first.trips.size.times do
+        headings << 'Trip'
+        headings << 'Duration'
+        headings << 'Arrival' if options[:arrival_time]
+      end
+      headings << 'Fare Calculation' if options[:fare_calculation]
+      headings
     end
 
     def table
-      table = Terminal::Table.new(:headings => ['Price', 'Segments', 'Mileage', 'Level Mileage', 'CPM', 'Award Mileage', 'CPM', 'Outbound', 'Duration', 'Inbound', 'Duration', 'Fare Calculation'])
+      table = Terminal::Table.new(:headings => headings)
       rows.each do |row|
-        price, segments, mileage, level_mileage, level_cpm, award_mileage, award_cpm, outbound, outbound_duration, outbound_arrival_time, inbound, inbound_duration, inbound_arrival_time, fare_calculation = row
-        table << ["#{currency}#{price}", segments, mileage, level_mileage, '%.2f¢' % level_cpm, award_mileage, '%.2f¢' % award_cpm, outbound, minutes_to_words(outbound_duration), outbound_arrival_time, inbound, minutes_to_words(inbound_duration), inbound_arrival_time, fare_calculation]
+        table << row.formatted_values
         table.add_separator unless row == rows.last
       end
       table
-    end
-
-    private
-
-    def currency
-      itineraries.first.currency
-    end
-
-    def minutes_to_words(minutes)
-      [[60, :m], [24, :h], [1000, :d]].map do |count, name|
-        if minutes > 0
-          minutes, n = minutes.divmod(count)
-          "#{n.to_i}#{name}"
-        end
-      end.compact.reverse.join
     end
   end
 end
