@@ -37,12 +37,16 @@ OptionParser.new do |opts|
     trips << FlightSeeker::TripQuery.from_trip_description(trip)
   end
 
-  opts.on("--fare-calculation", "Include the fare calculation which can be used to order an itinerary from a travel agent.") do |fare_calculation|
-    options[:fare_calculation] = true
-  end
-
   opts.on("--arrival-time", "Include the arrival times of each trip in the itinerary.") do |arrival_time|
     options[:arrival_time] = true
+  end
+
+  opts.on("--segment-info", "Include the airline, booking code, and miles per segment.") do |segment_mileage|
+    options[:segment_info] = true
+  end
+
+  opts.on("--fare-calculation", "Include the fare calculation which can be used to order an itinerary from a travel agent.") do |fare_calculation|
+    options[:fare_calculation] = true
   end
 
   opts.on("--sort=FIELDS", "Sort by field indices (comma separated, negative for reverse sort)") do |fields|

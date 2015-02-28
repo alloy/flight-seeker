@@ -21,12 +21,14 @@ module FlightSeeker
         itinerary.mileage
       end
 
+      # TODO how is it really rounded?
       def level_mileage
-        options[:award_program].itinerary_level_mileage(itinerary)
+        options[:award_program].itinerary_level_mileage(itinerary).to_i
       end
 
+      # TODO how is it really rounded?
       def award_mileage
-        options[:award_program].itinerary_award_mileage(itinerary)
+        options[:award_program].itinerary_award_mileage(itinerary).to_i
       end
 
       def fare_calculation
@@ -39,7 +41,7 @@ module FlightSeeker
       end
 
       def trip_descriptions
-        itinerary.trips.map(&:to_s)
+        itinerary.trips.map { |trip| trip.to_s(options[:segment_info]) }
       end
 
       def trip_durations

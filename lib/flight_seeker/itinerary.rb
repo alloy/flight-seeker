@@ -56,9 +56,13 @@ module FlightSeeker
         "<#{segments.first.origin.iata_designator}-#{segments.last.destination.iata_designator} duration:#{duration} segments:#{segments.map(&:inspect).join(', ')}>"
       end
 
-      def to_s
+      def to_s(include_segment_info = false)
         segments.map do |segment|
-          "#{segment.origin.iata_designator}-(#{segment.carrier.iata_designator}/#{segment.booking_code})->"
+          if include_segment_info
+            "#{segment.origin.iata_designator}-(#{segment.carrier.iata_designator}/#{segment.booking_code}/#{segment.mileage})->"
+          else
+            "#{segment.origin.iata_designator}->"
+          end
         end.join << segments.last.destination.iata_designator
       end
 
