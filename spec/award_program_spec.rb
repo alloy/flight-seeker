@@ -7,59 +7,33 @@ module FlightSeeker
   describe AwardProgram do
     before do
       @itinerary = Itinerary.new({
-        # require 'active_support'
-        # pp hash.slice('saleTotal', 'slice')
        "saleTotal"=>"EUR709.93",
        "slice"=>
         [{"kind"=>"qpxexpress#sliceInfo",
           "duration"=>954,
           "segment"=>
            [{"kind"=>"qpxexpress#segmentInfo",
-             "duration"=>85,
-             "flight"=>{"carrier"=>"AF", "number"=>"8227"},
-             "id"=>"G8u8FmlKeXIMxeFi",
+             "duration"=>475,
+             "flight"=>{"carrier"=>"KL", "number"=>"6034"},
+             "id"=>"GHd2JS9avjGKQgiu",
              "cabin"=>"COACH",
              "bookingCode"=>"L",
              "bookingCodeCount"=>9,
-             "marriedSegmentGroup"=>"0",
+             "marriedSegmentGroup"=>"2",
              "leg"=>
               [{"kind"=>"qpxexpress#legInfo",
-                "id"=>"LNtzki+GIRhbBGcZ",
-                "aircraft"=>"73J",
-                "arrivalTime"=>"2015-04-13T08:40+02:00",
-                "departureTime"=>"2015-04-13T07:15+02:00",
-                "origin"=>"AMS",
-                "destination"=>"CDG",
-                "destinationTerminal"=>"2F",
-                "duration"=>85,
-                "operatingDisclosure"=>"OPERATED BY KLM",
-                "mileage"=>247,
-                "meal"=>"Snack or Brunch"}],
-             "connectionDuration"=>130},
-            {"kind"=>"qpxexpress#segmentInfo",
-             "duration"=>524,
-             "flight"=>{"carrier"=>"AF", "number"=>"3618"},
-             "id"=>"GWxFYCyKw8o+CaeU",
-             "cabin"=>"COACH",
-             "bookingCode"=>"V",
-             "bookingCodeCount"=>8,
-             "marriedSegmentGroup"=>"1",
-             "leg"=>
-              [{"kind"=>"qpxexpress#legInfo",
-                "id"=>"LzWkpOCJfQsAW7Ld",
-                "aircraft"=>"744",
-                "arrivalTime"=>"2015-04-13T13:34-04:00",
-                "departureTime"=>"2015-04-13T10:50+02:00",
-                "origin"=>"CDG",
-                "destination"=>"DTW",
-                "originTerminal"=>"2E",
-                "destinationTerminal"=>"EM",
-                "duration"=>524,
+                "id"=>"LORKvrKK0ie0N58H",
+                "aircraft"=>"333",
+                "arrivalTime"=>"2015-04-19T09:45+02:00",
+                "departureTime"=>"2015-04-18T19:50-04:00",
+                "origin"=>"DTW",
+                "destination"=>"AMS",
+                "originTerminal"=>"EM",
+                "duration"=>475,
                 "operatingDisclosure"=>"OPERATED BY DELTA",
-                "mileage"=>3949,
-                "meal"=>"Lunch",
-                "secure"=>true}],
-             "connectionDuration"=>116},
+                "mileage"=>3927,
+                "meal"=>"Dinner",
+                "secure"=>true}]},
             {"kind"=>"qpxexpress#segmentInfo",
              "duration"=>99,
              "flight"=>{"carrier"=>"AF", "number"=>"8830"},
@@ -132,10 +106,9 @@ module FlightSeeker
                 "secure"=>true}]}]}]
       })
 
-      # <price:709.93 segments:5 mileage:9123 duration:1609 trips:
-      #   <AMS-LGA duration:954 segments:
-      #     <AF booking-code:L mileage:247  leg:AMS-CDG european:true  national:false>,
-      #     <AF booking-code:V mileage:3949 leg:CDG-DTW european:false national:false>,
+      # <price:709.93 segments:4 mileage:8854 duration:1310 trips:
+      #   <AMS-LGA duration:655 segments:
+      #     <KL booking-code:L mileage:3927 leg:AMS-DTW european:false national:false>
       #     <AF booking-code:V mileage:500  leg:DTW-LGA european:false national:true>
       #   >,
       #   <LGA-AMS duration:655 segments:
@@ -157,11 +130,10 @@ module FlightSeeker
         it "applies #{type} mileage based on the booking codes of the segments" do
           expected = 0
           # First trip
-          expected += 247  * 0.5
-          expected += 3949 * 0.25
+          expected += 3927 * 0.5
           expected += 500  * 0.25
           # Second trip
-          expected += 500 * 0.25
+          expected += 500  * 0.25
           expected += 3927 * 0.25
 
           @base_award_program.send("itinerary_#{type}_mileage", @itinerary).should == expected
@@ -180,7 +152,7 @@ module FlightSeeker
 
         it 'adds extra award mileage based on the FlyingBlue level' do
           expected = @base_award_program.itinerary_award_mileage(@itinerary)
-          expected += 9123 * 0.5
+          expected += 8854 * 0.5
           @flying_blue.itinerary_award_mileage(@itinerary).should == expected
         end
 
