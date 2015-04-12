@@ -145,6 +145,31 @@ module FlightSeeker
           @flying_blue = AwardProgram::FlyingBlue.new(:silver, nil)
         end
 
+        # Doesn't apply to all partners, though!
+        describe 'concerning flights that are shorter than a certain threshold' do
+          def itinerary(origin, destination, mileage)
+            Itinerary.new({
+              'slice' => [{
+                'segment' => [{
+                  'flight' => { 'carrier' => 'KL', 'number' => '4242' },
+                  'bookingCode' => 'Y',
+                  'leg' => [{ 'origin' => origin, 'destination' => destination, 'mileage' => mileage }]
+                }]
+              }]
+            })
+          end
+
+          it 'has a minimum of 500 miles for national flights' do
+            @flying_blue.itinerary_level_mileage(itinerary('CDG', 'BOD', 499)).should == 500
+            @flying_blue.itinerary_level_mileage(itinerary('CDG', 'BOD', 501)).should == 501
+          end
+
+          it 'has a minimum of 750 miles for international flights' do
+            @flying_blue.itinerary_level_mileage(itinerary('AMS', 'BOD', 749)).should == 750
+            @flying_blue.itinerary_level_mileage(itinerary('AMS', 'BOD', 751)).should == 751
+          end
+        end
+
         it 'does not award extra level mileage' do
           expected = @base_award_program.itinerary_level_mileage(@itinerary)
           @flying_blue.itinerary_level_mileage(@itinerary).should == expected

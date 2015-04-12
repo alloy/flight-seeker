@@ -124,6 +124,10 @@ module FlightSeeker
           origin.country == destination.country
         end
 
+        def international?
+          !national?
+        end
+
         def connection_duration
           @payload['connectionDuration'] || 0
         end

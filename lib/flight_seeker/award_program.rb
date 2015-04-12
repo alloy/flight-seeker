@@ -29,12 +29,14 @@ module FlightSeeker
         super + itinerary_booking_code_mileage(itinerary)
       end
 
-      private
+      def segment_mileage(segment)
+        segment.mileage
+      end
 
       def itinerary_booking_code_mileage(itinerary)
         itinerary.trips.inject(0) do |itinerary_sum, trip|
           itinerary_sum + trip.segments.inject(0) do |trip_sum, segment|
-            trip_sum + (segment_booking_code_multiplier(segment) * segment.mileage)
+            trip_sum + (segment_booking_code_multiplier(segment) * segment_mileage(segment))
           end
         end
       end
@@ -50,6 +52,39 @@ module FlightSeeker
     end
 
     class FlyingBlue < FrequentFlyer
+      # Minimum mileages
+
+      CARRIERS_WITH_MINIMUM_MILEAGE = {
+        :national => {
+          'KL' => true,
+          'AF' => true,
+        },
+        :international => {
+          'KL' => true,
+          'AF' => true,
+        }
+      }
+
+      def carrier_has_minimum_mileage?(segment, type)
+        iata_designator = segment.carrier.iata_designator
+        unless CARRIERS_WITH_MINIMUM_MILEAGE[type].has_key?(iata_designator)
+          $stderr.puts "[!] Unknown whether carrier has a minimum #{type} mileage: #{segment.inspect}"
+        end
+        CARRIERS_WITH_MINIMUM_MILEAGE[type][iata_designator]
+      end
+
+      def segment_mileage(segment)
+        mileage = segment.mileage
+        if mileage < 500 && segment.national? && carrier_has_minimum_mileage?(segment, :national)
+          mileage = 500
+        elsif mileage < 750 && segment.international? && carrier_has_minimum_mileage?(segment, :international)
+          mileage = 750
+        end
+        mileage
+      end
+
+      # Program awards
+
       def program_level_bonus
         case @program_level
         when :silver
